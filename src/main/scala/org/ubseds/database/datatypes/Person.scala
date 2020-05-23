@@ -25,7 +25,10 @@ class Person(val personNumber: Int) {
     }
   }
 
+  override def toString: String = personNumber.toString
+
   def toJson(): JsValue = {
-    Json.toJson("****-"+ this.abbreviatedPersonNumber)
+//    Json.toJson("****-"+ this.abbreviatedPersonNumber)
+    Json.toJson(this.toString)
   }
 }

@@ -37,6 +37,7 @@ function displayQueue() {
     else {
         const oldQueue = document.getElementById("checkedInQueue");
         let newQueue = document.createElement("div");
+        newQueue.id = "checkedInQueue"
 
         for (const student of queue) {
             const unix_timestamp = student['timestamp'];
@@ -45,24 +46,30 @@ function displayQueue() {
             const formattedDate = days[dateObj.getDay()] + " " + dateObj.getHours() + ':' + dateObj.getMinutes()
             const username = student['username'];
 
-            const nameSpan = document.createElement("span");
+            let nameSpan = document.createElement("span");
+            nameSpan.classList.add("queueName")
             nameSpan.innerText = username
 
-            const textDiv = document.createElement("div");
+            let textDiv = document.createElement("div");
             textDiv.innerText = " has been in the lab since "
 
-            const timeSpan = document.createElement("time");
+            let timeSpan = document.createElement("time");
             timeSpan.innerText = formattedDate
 
-            const infoDiv = document.createElement("div");
+            let infoDiv = document.createElement("div");
             infoDiv.classList.add("details")
             infoDiv.appendChild(nameSpan)
             infoDiv.appendChild(textDiv)
             infoDiv.appendChild(timeSpan)
 
-            const queueEntry = document.createElement("div");
+            let checkOutBtn = document.createElement("button")
+            checkOutBtn.innerText = "X"
+            checkOutBtn.onclick   = function() {clockOffPersonNum(checkOutBtn);};
+
+            let queueEntry = document.createElement("div");
             queueEntry.classList.add("queueObject")
             queueEntry.appendChild(infoDiv)
+            queueEntry.appendChild(checkOutBtn)
 
             newQueue.appendChild(queueEntry)
         }
@@ -77,22 +84,30 @@ function displayMOTD(newMOTD) {
     document.getElementById("motd").innerHTML = newMOTD;
 }
 
-
 /**
  * Send server message with new clock-on
  */
 function clockInPersonNum() {
     let personNum = parseInt(document.getElementById("NumEnter").value);
     if(!isNaN(personNum) && personNum.toString().length == 8) {
-        socket.emit("clock_ubnum", personNum);
+        socket.emit("clockIn_ubnum", personNum);
         document.getElementById("NumEnter").value = "";
     } else {
         personNumEntryPopUp("Incorrect format for a UB Person Number!")
     }
 }
 
-function clockOutPersonNum() {
-
+/**
+ * Send server message with new clock-out
+ */
+function clockOffPersonNum(clicked_element) {
+    const nameElement = clicked_element.parentElement.getElementsByClassName("queueName")[0]
+    let personNum = parseInt(nameElement.innerText);
+    if(!isNaN(personNum) && personNum.toString().length == 8) {
+        socket.emit("clockOff_ubnum", personNum);
+    } else {
+        window.alert("Failed to clock out!")
+    }
 }
 
 /**
@@ -103,7 +118,6 @@ function personNumEntryPopUp(msg = "Error") {
     popup.innerHTML = msg
     popup.classList.toggle("show");
 }
-
 
 /**
  * Options for darkmode widget

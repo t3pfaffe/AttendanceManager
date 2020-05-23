@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 import org.ubseds.database.datatypes.Person
 import org.ubseds.database.{ClockManager, DuplicateKeyException}
 import org.ubseds.events.InvalidationObserver
-import org.ubseds.server.messages.receive.NumClockMsg
+import org.ubseds.server.messages.receive.{ClockInNumMsg, ClockOffNumMsg}
 import org.ubseds.server.messages.send.{ClockInStatusMsg, ClockedInUpdateMsg, MotdSendMsg}
 
 /**
@@ -27,7 +27,8 @@ class AttendanceManagerServer() {
 
   server.addDisconnectListener(new DisconnectionListener())
   server.addConnectListener(new ConnectionListener(this))
-  server.addEventListener( NumClockMsg.name, classOf[String], new NewClockInListener(this))
+  server.addEventListener( ClockInNumMsg.name,  classOf[String], new NewClockInListener( this))
+  server.addEventListener( ClockOffNumMsg.name, classOf[String], new NewClockOffListener(this))
 
   val clockManager = new ClockManager()
   clockManager.clockedIn.addObserver(new ClockedInListListener(this))
@@ -79,6 +80,7 @@ class NewClockOffListener(server: AttendanceManagerServer) extends DataListener[
         ackMsg = ClockInStatusMsg.INTERNAL_ERROR.toString
       }
     }
+
 
     if(ackSender.isAckRequested) ackSender.sendAckData(ackMsg)
   }
