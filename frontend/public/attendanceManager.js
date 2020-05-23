@@ -7,7 +7,7 @@ socket.on('motd',  displayMOTD);
 socket.on("*",function(event,data) {
     console.log("New event: [" + event + "] " + data);
 })
-var onevent = socket.onevent;
+const onevent = socket.onevent;
 socket.onevent = function (packet) {
     var args = packet.data || [];
     onevent.call (this, packet);    // original call
@@ -18,38 +18,70 @@ socket.onevent = function (packet) {
 
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-var queue = ""
+let queue = "";
 
-
+/**
+ * @param queueJSON change queue with JSON argument
+ */
 function updateQueue(queueJSON) {
     queue = JSON.parse(queueJSON);
     displayQueue()
 }
 
+/**
+ * Displays Queue
+ * (can be called periodically)
+ */
 function displayQueue() {
     if(queue == "")  document.getElementById("checkedInQueue").innerHTML = "<div class=\"details\"> <p>No one is currently checked-in to the lab.</p> </div>";
     else {
-        let formattedQueue = "";
+        const oldQueue = document.getElementById("checkedInQueue");
+        let newQueue = document.createElement("div");
+
         for (const student of queue) {
             const unix_timestamp = student['timestamp'];
             const dateObj = new Date(unix_timestamp * 1000)
+
             const formattedDate = days[dateObj.getDay()] + " " + dateObj.getHours() + ':' + dateObj.getMinutes()
-
             const username = student['username'];
-            formattedQueue += username + " has been in the lab since " + formattedDate + "<br/>"
 
+            const nameSpan = document.createElement("span");
+            nameSpan.innerText = username
+
+            const textDiv = document.createElement("div");
+            textDiv.innerText = " has been in the lab since "
+
+            const timeSpan = document.createElement("time");
+            timeSpan.innerText = formattedDate
+
+            const infoDiv = document.createElement("div");
+            infoDiv.classList.add("details")
+            infoDiv.appendChild(nameSpan)
+            infoDiv.appendChild(textDiv)
+            infoDiv.appendChild(timeSpan)
+
+            const queueEntry = document.createElement("div");
+            queueEntry.classList.add("queueObject")
+            queueEntry.appendChild(infoDiv)
+
+            newQueue.appendChild(queueEntry)
         }
-        document.getElementById("checkedInQueue").innerHTML = formattedQueue;
+        oldQueue.parentNode.replaceChild(newQueue, oldQueue);
     }
 }
 
+/**
+ * @param newMOTD change motd to new updated one.
+ */
 function displayMOTD(newMOTD) {
     document.getElementById("motd").innerHTML = newMOTD;
 }
 
 
-
-function enterPersonNum() {
+/**
+ * Send server message with new clock-on
+ */
+function clockInPersonNum() {
     let personNum = parseInt(document.getElementById("NumEnter").value);
     if(!isNaN(personNum) && personNum.toString().length == 8) {
         socket.emit("clock_ubnum", personNum);
@@ -57,15 +89,26 @@ function enterPersonNum() {
     } else {
         personNumEntryPopUp("Incorrect format for a UB Person Number!")
     }
+}
+
+function clockOutPersonNum() {
 
 }
 
+/**
+ * @param msg to be inside of popup error for PersonNumEntry
+ */
 function personNumEntryPopUp(msg = "Error") {
     let popup = document.getElementById("personNumPopUp");
     popup.innerHTML = msg
     popup.classList.toggle("show");
 }
 
+
+/**
+ * Options for darkmode widget
+ * @type {{backgroundColor: string, saveInCookies: boolean, left: string, bottom: string, buttonColorDark: string, right: string, time: string, label: string, autoMatchOsTheme: boolean, buttonColorLight: string, mixColor: string}}
+ */
 var options = {
     bottom: '64px',                  // default: '32px'
     right: '32px',                   // default: '32px'
